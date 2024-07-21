@@ -177,6 +177,18 @@ def main(unused_argv):
     np.savez('valset_data.npy', x)
     np.savez('valset_label.npy', e)
 
+from torch.utils.data import Dataset
+
+class RhoDataset(Dataset):
+  def __init__(self, datasets, labels):
+    self.datasets = np.load(datasets, mmap_mode = 'r')
+    self.labels = np.load(labels, mmap_mode = 'r')
+    assert self.datasets.shape[0] == self.labels.shape[0]
+  def __len__(self):
+    return self.datasets.shape[0]
+  def __getitem__(self, index):
+    return self.datasets[index], self.labels[index]
+
 if __name__=="__main__":
     add_options()
     app.run(main)
