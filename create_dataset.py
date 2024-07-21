@@ -48,12 +48,7 @@ def gen_cube(center, mol, dm, mesh, ni, ggnorm, *args):
     rho = rho01[0]
     gnorm = contract('dr,dr->r', rho01[1:], rho01[1:])**0.5
     tau = 0.5*contract('ij, dri, drj->r', dm, phi01[1:], phi01[1:])
-    # if ggnorm:
-    #     gg = get_rho2(cube, mol, ni, dm)
-    #     return np.hstack((rho.reshape(-1, 1), gnorm.reshape(-1, 1), gg.reshape(-1, 1), tau.reshape(-1, 1)))
     return np.hstack((rho.reshape(-1, 1), gnorm.reshape(-1, 1), tau.reshape(-1, 1)))
-
-
 
 def gen_cube_old(center, mol, dm, mesh, ni, theta):    
     cube = center + mesh
@@ -68,7 +63,6 @@ def gen_cube_old(center, mol, dm, mesh, ni, theta):
     gnorm = contract('dr,dr->r', rho01[1:], rho01[1:])**0.5
     tau = 0.5*contract('ij, dri, drj->r', dm, phi01[1:], phi01[1:])
     return np.hstack((rho.reshape(-1, 1), gnorm.reshape(-1, 1), tau.reshape(-1, 1)))
-
 
 def gen_cube_parallel(centers, mol, dm, mesh, ni, theta):
     # print('start', time.ctime()) 
@@ -102,33 +96,10 @@ def get_feature(data, mol, ni, a, n_samples=6, ggnorm=False, dm='b3'):
     theta = (1.35*a/(n_samples-1))**2
     # N = 30
     mesh = get_mesh(a, n_samples)
-    
     res = []
-
-    # for idx in range(0, len(data['gc']), 500):
-    #     centers = data['gc'][idx:idx+500]
-    #     cube_b3 = gen_cube_parallel(centers, mol, data['dm_b3'], mesh, ni, theta) #10, 1331
-    #     N = contract('nr->n', cube_b3*a**3)
-    #     D = contract('ri,nr->ni', mesh, cube_b3*a**3)
-    #     D = contract('ni,ni->n',D,D)**0.5
-    #     Q = np.sum(contract('ri,rj,nr->nij', mesh, mesh, cube_b3*a**3).diagonal(axis1=1,axis2=2), axis=1)
-
-    #     res.append(np.array([N,D,Q]).T)
-    # return np.vstack(res)
-
     for center in data['gc']:
-        # emb = atom_embedding(center, data['atoms_charges'], data['atoms_coords'], N)
-        # exc=data['e_xc'][local_id]/(data['rho_b3'][local_id]+eps)
-        # ecorr = data['e_corr'][local_id]/(data['rho_b3'][local_id]+eps)
-        # eu = (data['e_T_ccsd']+data['e_xc_noT'])[local_id]/(data['rho_b3'][local_id]+eps)
-        # cube_ccsd = gen_cube(center, mol, data['dm_ccsd'])
-        # cube_ccsd = np.concatenate((cube_ccsd, emb))
         cube_b3 = gen_cube(center, mol, data['dm_'+dm], mesh, ni, ggnorm, theta)
-        # cube_b3 = np.concatenate((cube_b3, emb))
-        # res.append([np.sum(cube_b3)*a**3, np.sum(cube_b3*dist)*a**3, np.sum(cube_b3*dist**2)*a**3])
-        # res.append([np.sum(cube_b3)*a**3, np.sum(contract('ri,r->i', mesh, cube_b3*a**3)**2), np.sum(contract('ri,rj,r->ij', mesh, mesh, cube_b3*a**3).diagonal())])
         res.append(cube_b3)
-    
     return np.array(res)
 
 def cal_mu(gc, atoms_charges, atoms_coords):
@@ -166,7 +137,6 @@ def gen_train_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_s
         e.append(e_corr/(data['rho_b3']+eps))
         gw.append(data['gw'])
     return np.vstack(x), np.concatenate(e), np.concatenate(rho), np.concatenate(rho_b3), path_list, np.concatenate(gw)
-
 
 def gen_valid_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_samples=6, dm='b3'):
     x, e, v, rho, rho_b3, gw = [], [], [], [], [], [], [], []
