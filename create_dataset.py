@@ -14,7 +14,6 @@ def add_options():
                                '/root/data/data/pkl_folder_CH_4/c2h6_-0.1000.pkl',
                                '/root/data/data/pkl_folder_CH_4/c2h6_0.1000.pkl',],
                     help = 'a list of pickles')
-  flags.DEFINE_string('output_prefix', default = 'dataset_', help = 'prefix of output files')
   flags.DEFINE_boolean('val', default = False, help = 'whether to generate validation dataset')
 
 def gen_cube(center, mol, dm, mesh, ni, ggnorm, *args):
@@ -201,12 +200,12 @@ def gen_valid_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_s
 def main(unused_argv):
   if not FLAGS.val:
     x, e, _, _, _, _ = gen_train_data(FLAGS.pkls, a = 0.9, n_samples = 6)
-    np.savez('%s_data.npy', x)
-    np.savez('%s_label.npy', e)
+    np.savez('trainset_data.npy', x)
+    np.savez('trainset_label.npy', e)
   else:
     x, e, _, _, _, _ = gen_valid_data(FLAGS.pkls, a = 0.9, n_samples = 6)
-    np.savez('%s_data.npy', x)
-    np.savez('%s_label.npy', e)
+    np.savez('valset_data.npy', x)
+    np.savez('valset_label.npy', e)
 
 if __name__=="__main__":
     add_options()
