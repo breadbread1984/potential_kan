@@ -139,7 +139,7 @@ def gen_train_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_s
     return np.vstack(x), np.concatenate(e), np.concatenate(rho), np.concatenate(rho_b3), path_list, np.concatenate(gw)
 
 def gen_valid_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_samples=6, dm='b3'):
-    x, e, v, rho, rho_b3, gw = [], [], [], [], [], [], []
+    x, e, v, rho, rho_b3, gw = [], [], [], [], [], []
     for fn in path_list:
         print(fn)
         with open(fn, 'rb') as f:
