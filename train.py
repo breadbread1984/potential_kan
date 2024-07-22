@@ -67,7 +67,7 @@ def main(unused_argv):
       optimizer.zero_grad()
       x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
       preds, regularizer = model(x, do_train = True if epoch == 0 else False)
-      loss = mae(e, preds) + FLAGS.reg_weight + regularizer
+      loss = mae(e, preds) + FLAGS.reg_weight * regularizer
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
