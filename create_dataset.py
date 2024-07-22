@@ -136,6 +136,8 @@ def gen_train_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_s
         rho_b3.append(data['rho_b3'])
         e.append(e_corr/(data['rho_b3']+eps))
         gw.append(data['gw'])
+        print(x[0].shape, e[0].shape)
+        exit()
     return np.vstack(x), np.concatenate(e), np.concatenate(rho), np.concatenate(rho_b3), path_list, np.concatenate(gw)
 
 def gen_valid_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_samples=6, dm='b3'):
@@ -170,12 +172,10 @@ def gen_valid_data(path_list, info=['rho', 'gnorm', 'tau'], eps=1e-7, a=0.9, n_s
 def main(unused_argv):
   if not FLAGS.val:
     x, e, _, _, _, _ = gen_train_data(FLAGS.pkls, a = 0.9, n_samples = 6)
-    np.savez('trainset_data.npy', x)
-    np.savez('trainset_label.npy', e)
+    np.savez('trainset.npy', datasets = x, labels = e)
   else:
     x, e, _, _, _, _ = gen_valid_data(FLAGS.pkls, a = 0.9, n_samples = 6)
-    np.savez('valset_data.npy', x)
-    np.savez('valset_label.npy', e)
+    np.savez('valset.npy', dataset = x, labels = e)
 
 from torch.utils.data import Dataset
 
