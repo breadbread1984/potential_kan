@@ -175,19 +175,18 @@ def main(unused_argv):
     np.savez('trainset.npy', datasets = x, labels = e)
   else:
     x, e, _, _, _, _ = gen_valid_data(FLAGS.pkls, a = 0.9, n_samples = 6)
-    np.savez('valset.npy', dataset = x, labels = e)
+    np.savez('valset.npy', datasets = x, labels = e)
 
 from torch.utils.data import Dataset
 
 class RhoDataset(Dataset):
   def __init__(self, datasets, labels):
     self.datasets = np.load(datasets, mmap_mode = 'r')
-    self.labels = np.load(labels, mmap_mode = 'r')
-    assert self.datasets.shape[0] == self.labels.shape[0]
+    assert self.datasets['datasets'].shape[0] == self.datasets['labels'].shape[0]
   def __len__(self):
-    return self.datasets.shape[0]
+    return self.datasets['datasets'].shape[0]
   def __getitem__(self, index):
-    dataset, label = self.datasets[index], self.labels[index]
+    dataset, label = self.datasets['datasets'][index], self.datasets['labels'][index]
     # NOTE: dataset.shape = (81, 3), label.shape = ()
     dataset = torch.reshape(dataset, (81 * 3,))
     return dataset, label
