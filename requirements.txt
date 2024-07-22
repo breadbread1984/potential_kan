@@ -1,2 +1,5 @@
 pyscf
 opt_einsum
+torch
+torchmetrics
+absl-py

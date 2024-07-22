@@ -2,7 +2,6 @@ from absl import flags, app
 import pickle as pk
 import numpy as np
 from pyscf import gto, dft
-import matplotlib.pyplot as plt
 from einsum import dm2rho, dm2rho01, dm2eT2, dm2eT, dm2eJ, dm2eK, cal_dipole, cal_I
 from opt_einsum import contract
 
