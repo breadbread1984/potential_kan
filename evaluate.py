@@ -47,7 +47,7 @@ def main(unused_argv):
   plt.scatter(exc_trues, diffs, c = 'b', s = 2, alpha = 0.7)
   plt.savefig('loss_plot.png')
   plt.clf()
-  counts, bins = np.histogram(diffs)
+  counts, bins = np.histogram(diffs, bins = 50)
   plt.stairs(counts, bins)
   plt.savefig('histogram.png')
   print('mean absolute error: %f median absolute error: %f' % (np.mean(diffs), np.median(diffs)))
