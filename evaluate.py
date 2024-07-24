@@ -10,7 +10,7 @@ from models import KAN
 FLAGS = flags.FLAGS
 
 def add_options():
-  flags.DFEINE_string('valset', default = None, help = 'file for valset')
+  flags.DEFINE_string('valset', default = None, help = 'file for valset')
   flags.DEFINE_integer('batch_size', default = 4096, help = 'batch size')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = {'cpu', 'cuda'}, help = 'device to use')
   flags.DEFINE_integer('workers', default = 256, help = 'number of workers')
