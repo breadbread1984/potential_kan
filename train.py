@@ -83,8 +83,10 @@ def main(unused_argv):
       for x, e in eval_dataloader:
         x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
         pred, _ = model(x, do_train = False)
-        true.append(torch.sinh(e).detach().cpu().numpy())
-        diff.append(torch.sinh(pred).detach().cpu().numpy())
+        true_e = torch.sinh(e).detach().cpu().numpy()
+        pred_e = torch.sinh(pred).detach().cpu().numpy()
+        true.append(true_e)
+        diff.append(np.abs(true_e - pred_e))
       true = np.squeeze(np.concatenate(true, axis = 0))
       diff = np.squeeze(np.concatenate(diff, axis = 0))
       plt.xlabel('exc ground truth')
