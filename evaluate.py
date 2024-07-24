@@ -36,8 +36,8 @@ def main(unused_argv):
   exc_trues = np.squeeze(np.concatenate(exc_trues, axis = 0), axis = -1)
   diffs = np.squeeze(np.concatenate(diffs, axis = 0), axis = -1)
   np.savez('eval.npz', true = exc_trues, diff = diffs)
-  plt.set_xlabel('exc ground truth')
-  plt.set_ylabel('exc prediction absolute loss')
+  plt.xlabel('exc ground truth')
+  plt.ylabel('exc prediction absolute loss')
   plt.scatter(exc_trues, diffs, c = 'b', s = 2, alpha = 0.7)
   plt.savefig('loss_plot.png')
 
