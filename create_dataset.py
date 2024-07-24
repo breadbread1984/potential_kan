@@ -188,7 +188,7 @@ class RhoDataset(Dataset):
   def __getitem__(self, index):
     dataset, label = self.datasets[index], self.labels[index]
     # NOTE: dataset.shape = (81, 3), label.shape = ()
-    dataset = torch.reshape(dataset, (81 * 3,))
+    dataset = np.reshape(dataset, (81 * 3,))
     return dataset, label
 
 if __name__=="__main__":
