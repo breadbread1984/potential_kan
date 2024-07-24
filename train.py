@@ -94,6 +94,10 @@ def main(unused_argv):
       plt.scatter(true, diff, c = 'b', s = 2, alpha = 0.7)
       global_steps = epoch * len(train_dataloader) + step
       tb_writer.add_figure('loss distribution', plt.gcf(), global_steps)
+      plt.clf()
+      counts, bins = np.histogram(diff, bins = 50)
+      plt.stairs(counts, bins)
+      tb_writer.add_figure('histogram', plt.gcf(), global_steps)
     if dist.get_rank() == 0:
       ckpt = {'epoch': epoch,
               'state_dict': model.state_dict(),
