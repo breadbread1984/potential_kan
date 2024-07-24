@@ -46,6 +46,7 @@ def main(unused_argv):
   plt.ylabel('exc prediction absolute loss')
   plt.scatter(exc_trues, diffs, c = 'b', s = 2, alpha = 0.7)
   plt.savefig('loss_plot.png')
+  plt.clf()
   counts, bins = np.histogram(diffs)
   plt.stairs(counts, bins)
   plt.savefig('histogram.png')
