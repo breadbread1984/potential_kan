@@ -25,7 +25,7 @@ def main(unused_argv):
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers)
   model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
   ckpt = load(FLAGS.ckpt)
-  model.load_state_dict({(key if key.startswith('module.') else ('module.' + key)):value for key, value in ckpt['state_dict'].items()})
+  model.load_state_dict(ckpt['state_dict'])
   model.to(device(FLAGS.device))
   model.eval()
   exc_trues = list()
