@@ -56,7 +56,7 @@ def main(unused_argv):
   start_epoch = 0
   if exists(join(FLAGS.ckpt, 'model.pth')):
     ckpt = load(join(FLAGS.ckpt, 'model.pth'))
-    state_dict = {(key if key.startswith('module.') else ('module.' + key)):value for key, value in ckpt['state_dict'].items()}
+  state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
     model.load_state_dict(state_dict)
     optimizer.load_state_dict(ckpt['optimizer'])
     scheduler = ckpt['scheduler']
