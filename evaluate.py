@@ -3,6 +3,7 @@
 from absl import flags, app
 import torch
 from torch import device, save, load, no_grad, any, isnan, autograd, sinh, log
+from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
 from models import KAN
