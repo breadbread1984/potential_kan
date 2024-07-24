@@ -25,10 +25,10 @@ def add_options():
   flags.DEFINE_string('ckpt', default = 'ckpt', help = 'path to directory for checkpoints')
   flags.DEFINE_integer('batch_size', default = 4096, help = 'batch size')
   flags.DEFINE_integer('save_freq', default = 1000, help = 'checkpoint save frequency')
-  flags.DEFINE_integer('epochs', default = 600, help = 'epochs to train')
+  flags.DEFINE_integer('epochs', default = 13, help = 'epochs to train')
   flags.DEFINE_float('lr', default = 1e-4, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 200000, help = 'decay steps')
-  flags.DEFINE_integer('workers', default = 256, help = 'number of workers')
+  flags.DEFINE_integer('workers', default = 16, help = 'number of workers')
   flags.DEFINE_float('reg_weight', default = 0.01, help = 'weight of regularizer')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = ['cpu', 'cuda'], help = 'device')
 
