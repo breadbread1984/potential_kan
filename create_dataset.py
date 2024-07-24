@@ -189,6 +189,7 @@ class RhoDataset(Dataset):
     dataset, label = self.datasets[index], self.labels[index]
     # NOTE: dataset.shape = (81, 3), label.shape = ()
     dataset = np.reshape(dataset, (81 * 3,))
+    label = np.reshape(label, (1,))
     return np.log(dataset.astype(np.float32)), np.arcsinh(label.astype(np.float32))
 
 if __name__=="__main__":
