@@ -50,6 +50,7 @@ def main(unused_argv):
   counts, bins = np.histogram(diffs)
   plt.stairs(counts, bins)
   plt.savefig('histogram.png')
+  print('mean absolute error: %f median absolute error: %f' % (np.mean(diffs), np.median(diffs)))
 
 if __name__ == "__main__":
   add_options()
