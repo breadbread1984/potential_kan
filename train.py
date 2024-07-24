@@ -86,7 +86,7 @@ def main(unused_argv):
     for x, e in eval_dataloader:
       x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
       preds, _ = model(x, do_train = False)
-      print('evaluate: loss %f' % torchmetrics.functional.mean_absolute_error(e, preds))
+      print('evaluate: loss %f' % mae(e, preds))
 
 if __name__ == "__main__":
   add_options()
