@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from absl import flags, app
+import numpy as np
 import torch
 from torch import device, save, load, no_grad, any, isnan, autograd, sinh, log
 from torch.utils.data import DataLoader
