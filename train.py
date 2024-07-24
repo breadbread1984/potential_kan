@@ -12,7 +12,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from torch.utils.data import DataLoader, distributed
 from torch.utils.tensorboard import SummaryWriter
-import torchmetrics
+import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
 from models import KAN
 
@@ -71,7 +71,7 @@ def main(unused_argv):
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
-      if global_steps % 100 == 0 and dist.get_rank() == 0:
+      if global_steps % 5 == 0 and dist.get_rank() == 0:
         print('Step #%d Epoch #%d: loss %f, lr %f' % (global_steps, epoch, loss, scheduler.get_last_lr()[0]))
         tb_writer.add_scalar('loss', loss, global_steps)
       if global_steps % FLAGS.save_freq == 0 and dist.get_rank() == 0:
@@ -81,12 +81,21 @@ def main(unused_argv):
                 'scheduler': scheduler}
         save(ckpt, join(FLAGS.ckpt, 'model.pth'))
     scheduler.step()
-    eval_dataloader.sampler.set_epoch(epoch)
-    model.eval()
-    for x, e in eval_dataloader:
-      x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-      preds, _ = model(x, do_train = False)
-      print('evaluate: loss %f' % mae(torch.sinh(e), torch.sinh(preds)))
+    if global_steps % 5 == 0 and dist.get_rank() == 0:
+      eval_dataloader.sampler.set_epoch(epoch)
+      model.eval()
+      true, diff = list(), list()
+      for x, e in eval_dataloader:
+        x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
+        pred, _ = model(x, do_train = False)
+        true.append(torch.sinh(e).detach().cpu().numpy())
+        diff.append(torch.sinh(pred).detach().cpu().numpy())
+      true = np.squeeze(np.concatenate(true, axis = 0))
+      diff = np.squeeze(np.concatenate(diff, axis = 0))
+      plt.xlabel('exc ground truth')
+      plt.ylabel('exc prediction absolute loss')
+      plt.scatter(true, diff, c = 'b', s = 2, alpha = 0.7)
+      tb_writer.add_image('loss distribution', plt.gcf(), 0)
 
 if __name__ == "__main__":
   add_options()
