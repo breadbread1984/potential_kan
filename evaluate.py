@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from absl import flags, app
+from os.path import exists, join
 import numpy as np
 import torch
 from torch import device, save, load, no_grad, any, isnan, autograd, sinh, log
@@ -14,13 +15,17 @@ FLAGS = flags.FLAGS
 def add_options():
   flags.DEFINE_string('valset', default = None, help = 'file for valset')
   flags.DEFINE_integer('batch_size', default = 4096, help = 'batch size')
+  flags.DEFINE_string('ckpt', default = None, help = 'checkpoint')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = {'cpu', 'cuda'}, help = 'device to use')
   flags.DEFINE_integer('workers', default = 256, help = 'number of workers')
 
 def main(unused_argv):
+  assert exists(FLAGS.ckpt)
   evalset = RhoDataset(FLAGS.valset)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers)
   model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
+  ckpt = load(FLAGS.ckpt)
+  model.load_state_dict({(key if key.startswith('module.') else ('module.' + key)):value for key, value in ckpt['state_dict'].items()})
   model.to(device(FLAGS.device))
   model.eval()
   exc_trues = list()
