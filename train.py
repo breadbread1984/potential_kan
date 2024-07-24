@@ -72,7 +72,7 @@ def main(unused_argv):
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
-      if global_steps % 5 == 0 and dist.get_rank() == 0:
+      if global_steps % 100 == 0 and dist.get_rank() == 0:
         print('Step #%d Epoch #%d: loss %f, lr %f' % (global_steps, epoch, loss, scheduler.get_last_lr()[0]))
         tb_writer.add_scalar('loss', loss, global_steps)
       if global_steps % FLAGS.save_freq == 0 and dist.get_rank() == 0:
@@ -82,7 +82,7 @@ def main(unused_argv):
                 'scheduler': scheduler}
         save(ckpt, join(FLAGS.ckpt, 'model.pth'))
     scheduler.step()
-    if global_steps % 5 == 0 and dist.get_rank() == 0:
+    if dist.get_rank() == 0:
       eval_dataloader.sampler.set_epoch(epoch)
       model.eval()
       true, diff = list(), list()
