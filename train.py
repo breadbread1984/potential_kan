@@ -75,12 +75,6 @@ def main(unused_argv):
       if global_steps % 100 == 0 and dist.get_rank() == 0:
         print('Step #%d Epoch #%d: loss %f, lr %f' % (global_steps, epoch, loss, scheduler.get_last_lr()[0]))
         tb_writer.add_scalar('loss', loss, global_steps)
-      if global_steps % FLAGS.save_freq == 0 and dist.get_rank() == 0:
-        ckpt = {'epoch': epoch,
-                'state_dict': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler}
-        save(ckpt, join(FLAGS.ckpt, 'model.pth'))
     scheduler.step()
     if dist.get_rank() == 0:
       eval_dataloader.sampler.set_epoch(epoch)
@@ -98,6 +92,12 @@ def main(unused_argv):
       plt.scatter(true, diff, c = 'b', s = 2, alpha = 0.7)
       global_steps = epoch * len(train_dataloader) + step
       tb_writer.add_figure('loss distribution', plt.gcf(), global_steps)
+    if dist.get_rank() == 0:
+      ckpt = {'epoch': epoch,
+              'state_dict': model.state_dict(),
+              'optimizer': optimizer.state_dict(),
+              'scheduler': scheduler}
+      save(ckpt, join(FLAGS.ckpt, 'model.pth'))
 
 if __name__ == "__main__":
   add_options()
