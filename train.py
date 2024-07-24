@@ -97,7 +97,7 @@ def main(unused_argv):
       plt.ylabel('exc prediction absolute loss')
       plt.scatter(true, diff, c = 'b', s = 2, alpha = 0.7)
       global_steps = epoch * len(train_dataloader) + step
-      tb_writer.add_figure('loss distribution', plt.figure(), global_steps)
+      tb_writer.add_figure('loss distribution', plt.gcf(), global_steps)
 
 if __name__ == "__main__":
   add_options()
