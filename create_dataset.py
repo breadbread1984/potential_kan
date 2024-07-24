@@ -180,7 +180,7 @@ from torch.utils.data import Dataset
 
 class RhoDataset(Dataset):
   def __init__(self, datasets):
-    self.datasets = np.load(datasets, mmap_mode = 'r')
+    self.datasets = np.load(datasets)
     assert self.datasets['datasets'].shape[0] == self.datasets['labels'].shape[0]
   def __len__(self):
     return self.datasets['datasets'].shape[0]
