@@ -178,12 +178,15 @@ from torch.utils.data import Dataset
 
 class RhoDataset(Dataset):
   def __init__(self, datasets):
-    self.datasets = np.load(datasets)
-    assert self.datasets['datasets'].shape[0] == self.datasets['labels'].shape[0]
+    data = np.load(datasets)
+    self.datasets = np.copy(data['datasets'])
+    self.labels = np.copy(data['labels'])
+    del data
+    assert self.datasets.shape[0] == self.labels.shape[0]
   def __len__(self):
-    return self.datasets['datasets'].shape[0]
+    return self.datasets.shape[0]
   def __getitem__(self, index):
-    dataset, label = self.datasets['datasets'][index], self.datasets['labels'][index]
+    dataset, label = self.datasets[index], self.labels[index]
     # NOTE: dataset.shape = (81, 3), label.shape = ()
     dataset = torch.reshape(dataset, (81 * 3,))
     return dataset, label
