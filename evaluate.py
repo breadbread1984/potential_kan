@@ -42,7 +42,7 @@ def main(unused_argv):
   diff = np.squeeze(np.concatenate(diff, axis = 0))
   plt.xlabel('exc ground truth')
   plt.ylabel('exc prediction absolute loss')
-  plt.scatter(exc_trues, diffs, c = 'b', s = 2, alpha = 0.7)
+  plt.scatter(true, diff, c = 'b', s = 2, alpha = 0.7)
   plt.savefig('loss_plot.png')
   plt.clf()
   counts, bins = np.histogram(diff, bins = 100)
