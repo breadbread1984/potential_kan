@@ -48,7 +48,11 @@ def main(unused_argv):
   counts, bins = np.histogram(diff, bins = 100)
   plt.stairs(counts, bins)
   plt.savefig('histogram.png')
-  print('mean absolute error: %f median absolute error: %f' % (np.mean(diff), np.median(diff)))
+  print('mean absolute error: %f' % np.mean(diff))
+  print('median absolute error: %f' % np.median(diff))
+  print('90%% quantile: %f' % np.quantile(diff, 0.9))
+  print('95%% quantile: %f' % np.quantile(diff, 0.95))
+  print('99%% quantile: %f' % np.quantile(diff, 0.99))
 
 if __name__ == "__main__":
   add_options()
