@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, distributed
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
-from models import KAN
+from models import MLP
 
 FLAGS = flags.FLAGS
 
@@ -44,7 +44,7 @@ def main(unused_argv):
     print('trainset size: %d, evalset size: %d' % (len(trainset), len(evalset)))
   train_dataloader = DataLoader(trainset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = trainset_sampler, pin_memory = False)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = evalset_sampler, pin_memory = False)
-  model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
+  model = MLP()
   model.to(device(FLAGS.device))
   model = DDP(model, device_ids=[dist.get_rank()], output_device=dist.get_rank(), find_unused_parameters=True)
   mae = L1Loss()
@@ -67,7 +67,7 @@ def main(unused_argv):
     for step, (x, e) in enumerate(train_dataloader):
       optimizer.zero_grad()
       x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-      preds, regularizer = model(x, do_train = True if epoch % 5 == 0 else False)
+      preds, regularizer = model(x)
       loss = mae(e, preds) + FLAGS.reg_weight * regularizer
       loss.backward()
       optimizer.step()
@@ -82,7 +82,7 @@ def main(unused_argv):
       true, diff = list(), list()
       for x, e in eval_dataloader:
         x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-        pred, _ = model(x, do_train = False)
+        pred, _ = model(x)
         true_e = torch.sinh(e).detach().cpu().numpy()
         pred_e = torch.sinh(pred).detach().cpu().numpy()
         true.append(true_e)

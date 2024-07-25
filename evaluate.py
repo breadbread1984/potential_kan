@@ -8,7 +8,7 @@ from torch import device, save, load, no_grad, any, isnan, autograd, sinh, log
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
-from models import KAN
+from models import MLP
 
 FLAGS = flags.FLAGS
 
@@ -23,7 +23,7 @@ def main(unused_argv):
   assert exists(FLAGS.ckpt)
   evalset = RhoDataset(FLAGS.valset)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers)
-  model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
+  model = MLP()
   ckpt = load(FLAGS.ckpt)
   state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
   model.load_state_dict(state_dict)
@@ -33,7 +33,7 @@ def main(unused_argv):
   diff = list()
   for x, e in eval_dataloader:
     x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-    pred, _ = model(x, do_train = False)
+    pred, _ = model(x)
     true_e = torch.sinh(e).detach().cpu().numpy()
     pred_e = torch.sinh(pred).detach().cpu().numpy()
     true.append(true_e)
