@@ -29,7 +29,6 @@ def add_options():
   flags.DEFINE_float('lr', default = 1e-4, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 200000, help = 'decay steps')
   flags.DEFINE_integer('workers', default = 16, help = 'number of workers')
-  flags.DEFINE_float('reg_weight', default = 0.01, help = 'weight of regularizer')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = ['cpu', 'cuda'], help = 'device')
 
 def main(unused_argv):
@@ -67,8 +66,8 @@ def main(unused_argv):
     for step, (x, e) in enumerate(train_dataloader):
       optimizer.zero_grad()
       x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-      preds, regularizer = model(x)
-      loss = mae(e, preds) + FLAGS.reg_weight * regularizer
+      preds = model(x)
+      loss = mae(e, preds)
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
@@ -82,7 +81,7 @@ def main(unused_argv):
       true, diff = list(), list()
       for x, e in eval_dataloader:
         x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-        pred, _ = model(x)
+        pred = model(x)
         true_e = torch.sinh(e).detach().cpu().numpy()
         pred_e = torch.sinh(pred).detach().cpu().numpy()
         true.append(true_e)

@@ -33,7 +33,7 @@ def main(unused_argv):
   diff = list()
   for x, e in eval_dataloader:
     x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-    pred, _ = model(x)
+    pred = model(x)
     true_e = torch.sinh(e).detach().cpu().numpy()
     pred_e = torch.sinh(pred).detach().cpu().numpy()
     true.append(true_e)
