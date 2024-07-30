@@ -67,8 +67,8 @@ def main(unused_argv):
     for step, (x, e) in enumerate(train_dataloader):
       optimizer.zero_grad()
       x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-      preds, regularizer = model(x, do_train = True if epoch % 5 == 0 else False)
-      loss = mae(e, preds) + FLAGS.reg_weight * regularizer
+      preds = model(x)
+      loss = mae(e, preds)
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
@@ -82,7 +82,7 @@ def main(unused_argv):
       true, diff = list(), list()
       for x, e in eval_dataloader:
         x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-        pred, _ = model(x, do_train = False)
+        pred = model(x)
         true_e = torch.sinh(e).detach().cpu().numpy()
         pred_e = torch.sinh(pred).detach().cpu().numpy()
         true.append(true_e)
