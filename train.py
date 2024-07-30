@@ -29,7 +29,6 @@ def add_options():
   flags.DEFINE_float('lr', default = 1e-4, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 200000, help = 'decay steps')
   flags.DEFINE_integer('workers', default = 16, help = 'number of workers')
-  flags.DEFINE_float('reg_weight', default = 0.01, help = 'weight of regularizer')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = ['cpu', 'cuda'], help = 'device')
 
 def main(unused_argv):
