@@ -130,7 +130,7 @@ class MLP(nn.Module):
       nn.BatchNorm1d(8),
       nn.Linear(8, 4),
       nn.Dropout(),
-      nn.Dropout(),
+      nn.GELU(),
       nn.BatchNorm1d(4),
       nn.Linear(4,1)
     )
