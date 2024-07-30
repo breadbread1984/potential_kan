@@ -23,7 +23,7 @@ def add_options():
   flags.DEFINE_string('trainset', default = None, help = 'file for trainset')
   flags.DEFINE_string('valset', default = None, help = 'file for valset')
   flags.DEFINE_string('ckpt', default = 'ckpt', help = 'path to directory for checkpoints')
-  flags.DEFINE_integer('batch_size', default = 4096, help = 'batch size')
+  flags.DEFINE_integer('batch_size', default = 128, help = 'batch size')
   flags.DEFINE_integer('save_freq', default = 1000, help = 'checkpoint save frequency')
   flags.DEFINE_integer('epochs', default = 200, help = 'epochs to train')
   flags.DEFINE_float('lr', default = 1e-4, help = 'learning rate')
