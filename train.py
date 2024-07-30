@@ -56,14 +56,7 @@ def main(unused_argv):
   start_epoch = 0
   if exists(join(FLAGS.ckpt, 'model.pth')):
     ckpt = load(join(FLAGS.ckpt, 'model.pth'))
-    state_dict = {(key.replace('module.','') if key.startswith('module.') n_channel = 1)
-              inputs = torch.randn(2, 739, 1,)
-                results = predictor(inputs)
-                  print(results.shape)else key):value for key, value in ckpt['state_dict'].items()}
-  Sorch.save(kan, 'kan.torch')
-  print(kan.parameters())
-   orch.save(kan, 'kan.torch')
-  print(kan.parameters())
+    state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
     model.load_state_dict(state_dict)
     optimizer.load_state_dict(ckpt['optimizer'])
     scheduler = ckpt['scheduler']
