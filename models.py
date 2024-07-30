@@ -55,8 +55,6 @@ class SwitchMoE(nn.Module):
     def __init__(
         self,
         dim: int,
-        hidden_dim: int,
-        output_dim: int,
         num_experts: int,
         capacity_factor: float = 1.0,
         mult: int = 4,
@@ -65,8 +63,6 @@ class SwitchMoE(nn.Module):
     ):
         super().__init__()
         self.dim = dim
-        self.hidden_dim = hidden_dim
-        self.output_dim = output_dim
         self.num_experts = num_experts
         self.capacity_factor = capacity_factor
         self.mult = mult
@@ -124,13 +120,17 @@ class MLP(nn.Module):
     super(MLP, self).__init__()
     self.model = nn.Sequential(
       nn.BatchNorm1d(81 * 3),
-      nn.Linear(81 *3, 8),
+      nn.Linear(81 * 3, 8),
       nn.Dropout(),
       nn.GELU(),
       nn.BatchNorm1d(8),
-      SwitchMoE(8, 32, 4, 3),
+      SwitchMoE(8, 3),
       nn.Dropout(),
       nn.GELU(),
+      nn.BatchNorm1d(8),
+      nn.Linear(8, 4),
+      nn.Dropout(),
+      nn.Dropout(),
       nn.BatchNorm1d(4),
       nn.Linear(4,1)
     )
