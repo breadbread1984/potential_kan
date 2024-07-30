@@ -128,7 +128,7 @@ class MLP(nn.Module):
       nn.Dropout(),
       nn.GELU(),
       nn.BatchNorm1d(8),
-      SwitchMoE(8, 32, 8, 3),
+      SwitchMoE(8, 32, 4, 3),
       nn.Dropout(),
       nn.GELU(),
       nn.BatchNorm1d(4),
