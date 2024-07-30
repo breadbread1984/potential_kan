@@ -8,7 +8,7 @@ from torch import device, save, load, no_grad, any, isnan, autograd, sinh, log
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
-from models import KAN
+from models import PredictorSmall
 
 FLAGS = flags.FLAGS
 
@@ -23,7 +23,7 @@ def main(unused_argv):
   assert exists(FLAGS.ckpt)
   evalset = RhoDataset(FLAGS.valset)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers)
-  model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
+  model = PredictorSmall(in_channel = 1)
   ckpt = load(FLAGS.ckpt)
   state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
   model.load_state_dict(state_dict)

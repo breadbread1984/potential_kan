@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, distributed
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
-from models import KAN
+from models import PredictorSmall
 
 FLAGS = flags.FLAGS
 
@@ -44,7 +44,7 @@ def main(unused_argv):
     print('trainset size: %d, evalset size: %d' % (len(trainset), len(evalset)))
   train_dataloader = DataLoader(trainset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = trainset_sampler, pin_memory = False)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = evalset_sampler, pin_memory = False)
-  model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
+  model = PredictorSmall(in_channel = 1)
   model.to(device(FLAGS.device))
   model = DDP(model, device_ids=[dist.get_rank()], output_device=dist.get_rank(), find_unused_parameters=True)
   mae = L1Loss()
@@ -56,7 +56,14 @@ def main(unused_argv):
   start_epoch = 0
   if exists(join(FLAGS.ckpt, 'model.pth')):
     ckpt = load(join(FLAGS.ckpt, 'model.pth'))
-    state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
+    state_dict = {(key.replace('module.','') if key.startswith('module.') n_channel = 1)
+              inputs = torch.randn(2, 739, 1,)
+                results = predictor(inputs)
+                  print(results.shape)else key):value for key, value in ckpt['state_dict'].items()}
+  Sorch.save(kan, 'kan.torch')
+  print(kan.parameters())
+   orch.save(kan, 'kan.torch')
+  print(kan.parameters())
     model.load_state_dict(state_dict)
     optimizer.load_state_dict(ckpt['optimizer'])
     scheduler = ckpt['scheduler']
