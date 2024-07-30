@@ -22,7 +22,7 @@ class SwitchGate(nn.Module):
         self.epsilon = epsilon
         self.w_gate = nn.Linear(dim, num_experts)
 
-    def forward(self, x: torch.Tensor, use_aux_loss=False):
+    def forward(self, x: torch.Tensor):
 
         # Compute gate scores
         gate_scores = F.softmax(self.w_gate(x), dim=-1)
@@ -48,16 +48,7 @@ class SwitchGate(nn.Module):
         # Norm gate scores to sum to the capacity
         gate_scores = (masked_gate_scores / denominators) * capacity
 
-        if use_aux_loss:
-            load = gate_scores.sum(0)  # Sum over all examples
-            importance = gate_scores.sum(1)  # Sum over all experts
-
-            # Aux loss is mean suqared difference between load and importance
-            loss = ((load - importance) ** 2).mean()
-
-            return gate_scores, loss
-
-        return gate_scores, None
+        return gate_scores
 
 class SwitchMoE(nn.Module):
 
@@ -69,7 +60,6 @@ class SwitchMoE(nn.Module):
         num_experts: int,
         capacity_factor: float = 1.0,
         mult: int = 4,
-        use_aux_loss: bool = False,
         *args,
         **kwargs,
     ):
@@ -80,7 +70,6 @@ class SwitchMoE(nn.Module):
         self.num_experts = num_experts
         self.capacity_factor = capacity_factor
         self.mult = mult
-        self.use_aux_loss = use_aux_loss
 
         self.experts = nn.ModuleList(
             [
@@ -102,8 +91,8 @@ class SwitchMoE(nn.Module):
     def forward(self, x: torch.Tensor):
 
         # (batch_size, seq_len, num_experts)
-        gate_scores, loss = self.gate(
-            x, use_aux_loss=self.use_aux_loss
+        gate_scores = self.gate(
+            x
         )
 
         # Dispatch to experts
@@ -128,7 +117,7 @@ class SwitchMoE(nn.Module):
             gate_scores.unsqueeze(-2) * stacked_expert_outputs, dim=-1
         )
 
-        return moe_output, loss
+        return moe_output
 
 class MLP(nn.Module):
   def __init__(self,):
