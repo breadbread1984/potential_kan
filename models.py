@@ -2,6 +2,7 @@
 
 import torch
 from torch import nn
+from torch.nn.functional as F
 
 class SwitchGate(nn.Module):
 
