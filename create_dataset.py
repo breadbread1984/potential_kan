@@ -22,10 +22,10 @@ class RhoDataset(Dataset):
   def __getitem__(self, index):
     memmap_index = bisect(self.start_indices, index) - 1
     index_in_memmap = index - self.start_indices[memmap_index]
-    data = self.npys[memmap_index]['rho_inv_4_norm'].reshape((4,-1))[index_in_memmap] # data.shape = (4,)
+    rho = self.npys[memmap_index]['rho_inv_4_norm'].reshape((4,-1))[index_in_memmap] # data.shape = (4,)
     vxc = self.npys[memmap_index]['vxc1_b3lyp'].reshape((1,-1))[index_in_memmap] # vxc.shape = (1,)
     exc = self.npys[memmap_index]['exc1_tr_b3lyp'].reshape((1,-1))[index_in_memmap] # exc.shape = (1,)
-    return np.log(dataset.astype(np.float32)), np.arcsinh(label.astype(np.float32))
+    return rho, vxc, exc
 
 if __name__=="__main__":
   pass
