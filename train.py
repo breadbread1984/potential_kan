@@ -70,10 +70,7 @@ def main(unused_argv):
       rho.requires_grad = True
       pred_exc = model(rho) # pred_exc.shape = (batch, 302)
       loss1 = mae(exc, pre_exc)
-      loss2 = 0
-      for i in range(302):
-        # autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0].shape = (batch,)
-        loss2 += mae(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i,0], create_graph = True)[0], vxc[:,i])
+      loss2 = mae(autograd.grad(torch.sum(rho[...,0] * pred_exc), rho[...,0], create_graph = True)[0], vxc)
       loss = loss1 + loss2
       loss.backward()
       optimizer.step()
