@@ -18,7 +18,7 @@ class Attention(nn.Module):
     self.dropout2 = nn.Dropout(self.drop_rate)
   def forward(self, inputs):
     # inputs.shape = (batch, seq_len, channel)
-    results = self.dense1(inputs) # results.shape = (batch, 4, 3 * channel)
+    results = self.dense1(inputs) # results.shape = (batch, 302, 3 * channel)
     b, s, _ = results.shape
     results = torch.reshape(results, (b, s, 3, self.num_heads, self.channel // self.num_heads)) # results.shape = (batch, seq_len, 3, head, channel // head)
     results = torch.permute(results, (0, 2, 3, 1, 4)) # results.shape = (batch, 3, head, seq_len, channel // head)
@@ -44,27 +44,27 @@ class ABlock(nn.Module):
     self.dense1 = nn.Linear(self.channel, self.channel * self.mlp_ratio)
     self.dense2 = nn.Linear(self.channel * self.mlp_ratio, self.channel)
     self.gelu = nn.GELU()
-    self.layernorm1 = nn.LayerNorm([4, self.channel,])
-    self.layernorm2 = nn.LayerNorm([4, self.channel,])
+    self.layernorm1 = nn.LayerNorm([302, self.channel,])
+    self.layernorm2 = nn.LayerNorm([302, self.channel,])
     self.dropout0 = nn.Dropout(self.drop_rate)
     self.dropout1 = nn.Dropout(self.drop_rate)
     self.dropout2 = nn.Dropout(self.drop_rate)
     self.atten = Attention(**kwargs)
   def forward(self, inputs):
-    # inputs.shape = (batch, 4, channel)
+    # inputs.shape = (batch, 302, channel)
     # attention
     skip = inputs
-    results = self.layernorm1(inputs) # results.shape = (batch, 4, channel)
-    results = self.atten(results) # results.shape = (batch, 4, channel)
+    results = self.layernorm1(inputs) # results.shape = (batch, 302, channel)
+    results = self.atten(results) # results.shape = (batch, 302, channel)
     results = self.dropout0(results)
     results = skip + results
     # mlp
     skip = results
     results = self.layernorm2(results)
-    results = self.dense1(results) # results.shape = (batch, 4, channel * mlp_ratio)
+    results = self.dense1(results) # results.shape = (batch, 302, channel * mlp_ratio)
     results = self.gelu(results)
     results = self.dropout1(results)
-    results = self.dense2(results) # results.shape = (batch, 4, channel)
+    results = self.dense2(results) # results.shape = (batch, 302, channel)
     results = self.dropout2(results)
     results = skip + results
     return results
@@ -84,24 +84,24 @@ class Extractor(nn.Module):
     self.tanh = nn.Tanh()
     self.dense1 = nn.Linear(self.in_channel, self.hidden_channels)
     self.dense2 = nn.Linear(self.hidden_channels, self.hidden_channels)
-    self.layernorm1 = nn.LayerNorm([4, 1,])
-    self.layernorm2 = nn.LayerNorm([4, self.hidden_channels])
+    self.layernorm1 = nn.LayerNorm([302, 1,])
+    self.layernorm2 = nn.LayerNorm([302, self.hidden_channels])
     self.dropout1 = nn.Dropout(self.drop_rate)
     self.blocks = nn.ModuleList([ABlock(channel = self.hidden_channels, qkv_bias = self.qkv_bias, num_heads = self.num_heads, **kwargs) for i in range(self.depth)])
     self.head = nn.Linear(self.hidden_channels, 1, bias = False)
   def forward(self, inputs):
-    # inputs.shape = (batch, 4, 1)
+    # inputs.shape = (batch, 302, 1)
     results = self.layernorm1(inputs)
-    results = self.dense1(results) # results.shape = (batch, 4, hidden_channels)
+    results = self.dense1(results) # results.shape = (batch, 302, hidden_channels)
     results = self.gelu(results)
     results = self.dropout1(results)
     # do attention only when the feature shape is small enough
     for i in range(self.depth):
       results = self.blocks[i](results)
     results = self.layernorm2(results)
-    results = self.dense2(results) # results.shape = (batch, 4, hidden_channels)
-    results = self.tanh(results) # results.shape = (batch, 4, hidden_channels)
-    results = self.head(results[:,0,:]) # results.shape = (batch, 1)
+    results = self.dense2(results) # results.shape = (batch, 302, hidden_channels)
+    results = self.tanh(results) # results.shape = (batch, 302, hidden_channels)
+    results = self.head(results) # results.shape = (batch, 302, 1)
     return results
 
 class PredictorSmall(nn.Module):
@@ -124,6 +124,6 @@ class PredictorBase(nn.Module):
 
 if __name__ == "__main__":
   predictor = PredictorSmall(in_channel = 1)
-  inputs = torch.randn(2, 4, 1,)
+  inputs = torch.randn(2, 302, 1,)
   results = predictor(inputs)
   print(results.shape)
