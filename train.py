@@ -29,7 +29,6 @@ def add_options():
   flags.DEFINE_float('lr', default = 1e-4, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 200000, help = 'decay steps')
   flags.DEFINE_integer('workers', default = 16, help = 'number of workers')
-  flags.DEFINE_float('reg_weight', default = 0.01, help = 'weight of regularizer')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = ['cpu', 'cuda'], help = 'device')
 
 def main(unused_argv):
@@ -64,11 +63,17 @@ def main(unused_argv):
   for epoch in range(start_epoch, FLAGS.epochs):
     train_dataloader.sampler.set_epoch(epoch)
     model.train()
-    for step, (x, e) in enumerate(train_dataloader):
+    for step, (rho, vxc, exc) in enumerate(train_dataloader):
       optimizer.zero_grad()
-      x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-      preds, regularizer = model(x, do_train = True if epoch % 5 == 0 else False)
-      loss = mae(e, preds) + FLAGS.reg_weight * regularizer
+      rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
+      rho.requires_grad = True
+      pred_exc = model(rho) # pred_exc.shape = (batch, 302)
+      loss1 = mae(exc, pre_exc)
+      loss2 = 0
+      for i in range(302):
+        # autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0].shape = (batch,)
+        loss2 += mae(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0], vxc[:,i])
+      loss = loss1 + loss2
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
@@ -80,9 +85,9 @@ def main(unused_argv):
       eval_dataloader.sampler.set_epoch(epoch)
       model.eval()
       true, diff = list(), list()
-      for x, e in eval_dataloader:
-        x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-        pred, _ = model(x, do_train = False)
+      for rho, vxc, exc in eval_dataloader:
+        rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
+        pred_exc = model(rho)
         true_e = torch.sinh(e).detach().cpu().numpy()
         pred_e = torch.sinh(pred).detach().cpu().numpy()
         true.append(true_e)
