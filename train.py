@@ -65,6 +65,7 @@ def main(unused_argv):
     model.train()
     for step, (rho, vxc, exc) in enumerate(train_dataloader):
       optimizer.zero_grad()
+      # rho.shape = (batch, 302, 1) vxc.shape = (batch, 302) exc.shape = (batch, 302)
       rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
       rho.requires_grad = True
       pred_exc = model(rho) # pred_exc.shape = (batch, 302)
@@ -72,7 +73,7 @@ def main(unused_argv):
       loss2 = 0
       for i in range(302):
         # autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0].shape = (batch,)
-        loss2 += mae(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0], vxc[:,i])
+        loss2 += mae(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i,0], create_graph = True)[0], vxc[:,i])
       loss = loss1 + loss2
       loss.backward()
       optimizer.step()
@@ -84,14 +85,25 @@ def main(unused_argv):
     if dist.get_rank() == 0:
       eval_dataloader.sampler.set_epoch(epoch)
       model.eval()
-      true, diff = list(), list()
+      e_true, e_diff = list(), list()
+      v_true, v_diff = list(), list()
       for rho, vxc, exc in eval_dataloader:
         rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
-        pred_exc = model(rho)
-        true_e = torch.sinh(e).detach().cpu().numpy()
-        pred_e = torch.sinh(pred).detach().cpu().numpy()
-        true.append(true_e)
-        diff.append(np.abs(true_e - pred_e))
+        rho.requires_grad = True
+        pred_exc = model(rho) # pred_exc.shape = (batch, 302)
+        pred_vxc = list()
+        for i in range(302):
+          pred_vxc.append(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i,0], create_graph = True)[0])
+        pred_vxc = torch.stack(pred_vxc, dim = -1) # pred_vxc.shape = (batch, 302)
+
+        true_e = exc.detach().cpu().numpy()
+        pred_e = pred_exc.detach().cpu().numpy()
+        e_true.append(true_e)
+        e_diff.append(np.abs(true_e - pred_e))
+        true_v = vxc.detach().cpu().numpy()
+        pred_v = pred_vxc.detach().cpu().numpy()
+        v_true.append(true_v)
+        v_diff.append(np.abs(true_v - pred_v))
       true = np.squeeze(np.concatenate(true, axis = 0))
       diff = np.squeeze(np.concatenate(diff, axis = 0))
       plt.xlabel('exc ground truth')
