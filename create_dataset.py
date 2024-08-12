@@ -4,6 +4,7 @@ from os import walk
 from os.path import join, splitext
 import numpy as np
 from bisect import bisect
+import torch
 from torch.utils.data import Dataset
 
 class RhoDataset(Dataset):
