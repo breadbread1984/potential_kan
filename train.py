@@ -68,12 +68,20 @@ def main(unused_argv):
       # rho.shape = (batch, 302, 1) vxc.shape = (batch, 302) exc.shape = (batch, 302)
       rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
       rho.requires_grad = True
-      pred_exc = model(rho) # pred_exc.shape = (batch, 302)
+      inputs = torch.unsqueeze(rho, dim = -1)
+      pred_exc = model(inputs) # pred_exc.shape = (batch, 302)
       loss1 = mae(exc, pred_exc)
+      
+      pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+      loss2 = mae(vxc, pred_vxc)
+      '''
       loss2 = 0
       for i in range(302):
+        import pdb; pdb.set_trace()
         # autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0].shape = (batch,)
-        loss2 += mae(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i,0], create_graph = True)[0], vxc[:,i])
+        p_vxc = autograd.grad(torch.sum(rho[:,i] * pred_exc[:,i]), rho[:,i], create_graph = True)
+        loss2 += mae(p_vxc[0], vxc[:,i])
+      '''
       loss = loss1 + loss2
       loss.backward()
       optimizer.step()
@@ -90,12 +98,14 @@ def main(unused_argv):
       for rho, vxc, exc in eval_dataloader:
         rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
         rho.requires_grad = True
-        pred_exc = model(rho).flatten() # pred_exc.shape = (batch, 302)
+        inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 302, 1)
+        pred_exc = model(inputs).flatten() # pred_exc.shape = (batch, 302)
+        pred_vxc = autograd.grad(torch.sum(rho[...,0] * pred_exc), rho[...,0], create_graph = True)[0].flatten()
+        '''
         pred_vxc = list()
         for i in range(302):
-          pred_vxc.append(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i,0], create_graph = True)[0])
-        pred_vxc = torch.stack(pred_vxc, dim = -1).flatten() # pred_vxc.shape = (batch, 302)
-
+          pred_vxc.append(autograd.grad(torch.sum(rho[:,i] * pred_exc[:,i]), rho[:,i], create_graph = True)[0])
+        '''
         true_e = exc.detach().cpu().numpy()
         pred_e = pred_exc.detach().cpu().numpy()
         e_true.append(true_e)
