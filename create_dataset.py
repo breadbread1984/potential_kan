@@ -28,7 +28,7 @@ class RhoDataset(Dataset):
     vxc = self.npys[memmap_index]['vxc1_b3lyp'].reshape((5 * 75, 302))[index_in_memmap] # vxc.shape = (302,)
     exc = self.npys[memmap_index]['exc1_tr_b3lyp'].reshape((5 * 75, 302))[index_in_memmap] # exc.shape = (302,)
     rho = np.expand_dims(rho, axis = -1) # rho.shape = (302, 1)
-    return rho, vxc, exc
+    return rho.astype(np.float32), vxc.astype(np.float32), exc.astype(np.float32)
 
 if __name__=="__main__":
   pass
