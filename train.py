@@ -79,7 +79,7 @@ def main(unused_argv):
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
       if global_steps % 100 == 0 and dist.get_rank() == 0:
-        print('Step #%d Epoch #%d: loss %f, lr %f' % (global_steps, epoch, loss, scheduler.get_last_lr()[0]))
+        print('Step #%d Epoch #%d: exc loss %f, vxc loss %f, lr %f' % (global_steps, epoch, loss1, loss2, scheduler.get_last_lr()[0]))
         tb_writer.add_scalar('loss', loss, global_steps)
     scheduler.step()
     if dist.get_rank() == 0:
@@ -91,7 +91,7 @@ def main(unused_argv):
         rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
         rho.requires_grad = True
         inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
-        pred_exc = model(inputs) # pred_exc.shape = (batch, 75 * 302)
+        pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
         pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
         pred_exc = pred_exc.flatten()
         pred_vxc = pred_vxc.flatten()
