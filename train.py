@@ -95,6 +95,8 @@ def main(unused_argv):
         pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
         pred_exc = pred_exc.flatten()
         pred_vxc = pred_vxc.flatten()
+        vxc = vxc.flatten()
+        exc = exc.flatten()
         true_e = exc.detach().cpu().numpy()
         pred_e = pred_exc.detach().cpu().numpy()
         e_true.append(true_e)
