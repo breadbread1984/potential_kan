@@ -27,7 +27,7 @@ class RhoDataset(Dataset):
     rho = self.npys[memmap_index]['rho_inv_4_norm'][0,...].reshape((5 * 75, 302))[index_in_memmap] # data.shape = (302,)
     vxc = self.npys[memmap_index]['vxc1_b3lyp'].reshape((5 * 75, 302))[index_in_memmap] # vxc.shape = (302,)
     exc = self.npys[memmap_index]['exc1_tr_b3lyp'].reshape((5 * 75, 302))[index_in_memmap] # exc.shape = (302,)
-    rho = torch.unsqueeze(rho, dim = 0) # rho.shape = (302, 1)
+    rho = np.expand_dims(rho, axis = -1) # rho.shape = (302, 1)
     return rho, vxc, exc
 
 if __name__=="__main__":
