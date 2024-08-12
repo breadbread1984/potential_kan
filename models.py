@@ -118,7 +118,7 @@ class PredictorSmall(nn.Module):
   def __init__(self, **kwargs):
     super(PredictorSmall, self).__init__()
     hidden_channels = kwargs.get('hidden_channels', 256)
-    depth = kwargs.get('depth', 6)
+    depth = kwargs.get('depth', 3)
     self.predictor = Extractor(hidden_channels = hidden_channels, depth = depth, **kwargs)
   def forward(self, inputs):
     return torch.squeeze(self.predictor(inputs), dim = -1)
