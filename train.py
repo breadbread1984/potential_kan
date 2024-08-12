@@ -69,7 +69,7 @@ def main(unused_argv):
       rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
       rho.requires_grad = True
       pred_exc = model(rho) # pred_exc.shape = (batch, 302)
-      loss1 = mae(exc, pre_exc)
+      loss1 = mae(exc, pred_exc)
       loss2 = 0
       for i in range(302):
         # autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i], create_graph = True)[0].shape = (batch,)
