@@ -24,9 +24,12 @@ class RhoDataset(Dataset):
   def __getitem__(self, index):
     memmap_index = bisect(self.start_indices, index) - 1
     index_in_memmap = index - self.start_indices[memmap_index]
-    rho = self.npys[memmap_index]['rho_inv_4_norm'][0][index_in_memmap] # data.shape = (75, 302,)
+    rho = self.npys[memmap_index]['rho_inv_4_norm'][0,index_in_memmap] # data.shape = (75, 302,)
     vxc = self.npys[memmap_index]['vxc1_b3lyp'][index_in_memmap] # vxc.shape = (75, 302,)
     exc = self.npys[memmap_index]['exc1_tr_b3lyp'][index_in_memmap] # exc.shape = (75, 302,)
+    rho = np.ascontiguousarray(rho)
+    vxc = np.ascontiguousarray(vxc)
+    exc = np.ascontiguousarray(exc)
     return rho.astype(np.float32), vxc.astype(np.float32), exc.astype(np.float32)
 
 if __name__=="__main__":
