@@ -90,11 +90,11 @@ def main(unused_argv):
       for rho, vxc, exc in eval_dataloader:
         rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
         rho.requires_grad = True
-        pred_exc = model(rho) # pred_exc.shape = (batch, 302)
+        pred_exc = model(rho).flatten() # pred_exc.shape = (batch, 302)
         pred_vxc = list()
         for i in range(302):
           pred_vxc.append(autograd.grad(torch.sum(rho[:,i,0] * pred_exc[:,i]), rho[:,i,0], create_graph = True)[0])
-        pred_vxc = torch.stack(pred_vxc, dim = -1) # pred_vxc.shape = (batch, 302)
+        pred_vxc = torch.stack(pred_vxc, dim = -1).flatten() # pred_vxc.shape = (batch, 302)
 
         true_e = exc.detach().cpu().numpy()
         pred_e = pred_exc.detach().cpu().numpy()
