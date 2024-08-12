@@ -15,7 +15,7 @@ class RhoDataset(Dataset):
         stem, ext = splitext(f)
         if ext != '.npz': continue
         self.npys.append(np.load(join(root, f), mmap_mode = 'r'))
-        self.start_indices.append(count)
+        self.start_indices.append(self.data_count)
         self.data_count += np.prod(self.npys[-1]['rho_inv_4_norm'].shape[1:3])
   def __len__(self):
     return self.data_count
