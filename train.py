@@ -68,8 +68,8 @@ def main(unused_argv):
       # rho.shape = (batch, 302, 1) vxc.shape = (batch, 302) exc.shape = (batch, 302)
       rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
       rho.requires_grad = True
-      inputs = torch.unsqueeze(rho, dim = -1)
-      pred_exc = model(inputs) # pred_exc.shape = (batch, 302)
+      inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
+      pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
       loss1 = mae(exc, pred_exc)
       
       pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
