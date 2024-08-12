@@ -91,9 +91,10 @@ def main(unused_argv):
         rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
         rho.requires_grad = True
         inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
-        pred_exc = model(inputs).flatten() # pred_exc.shape = (batch, 75 * 302)
-        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0].flatten()
-
+        pred_exc = model(inputs) # pred_exc.shape = (batch, 75 * 302)
+        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+        pred_exc = pred_exc.flatten()
+        pred_vxc = pred_vxc.flatten()
         true_e = exc.detach().cpu().numpy()
         pred_e = pred_exc.detach().cpu().numpy()
         e_true.append(true_e)
