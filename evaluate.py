@@ -56,7 +56,6 @@ def main(unused_argv):
   plt.xlabel('exc ground truth')
   plt.ylabel('exc prediction absolute loss')
   plt.scatter(e_true, e_diff, c = 'b', s = 2, alpha = 0.7)
-  global_steps = epoch * len(train_dataloader) + step
   plt.savefig('exc_loss_distribution.png')
   plt.clf()
   plt.xlabel('vxc ground truth')
