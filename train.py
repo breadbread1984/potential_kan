@@ -72,7 +72,7 @@ def main(unused_argv):
       pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
       loss1 = mae(exc, pred_exc)
       
-      pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+      pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
       loss2 = mae(vxc, pred_vxc)
       loss = loss1 + loss2
       loss.backward()
@@ -93,7 +93,7 @@ def main(unused_argv):
         rho.requires_grad = True
         inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
         pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
-        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
         pred_exc = pred_exc.flatten()
         pred_vxc = pred_vxc.flatten()
         vxc = vxc.flatten()
