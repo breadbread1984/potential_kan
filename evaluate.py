@@ -36,7 +36,7 @@ def main(unused_argv):
     rho.requires_grad = True
     inputs = torch.unsqueeze(rho, dim = -1)
     pred_exc = model(inputs)
-    pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+    pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
     pred_exc = pred_exc.flatten()
     pred_vxc = pred_vxc.flatten()
     vxc = vxc.flatten()
