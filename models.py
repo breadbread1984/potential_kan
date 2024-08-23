@@ -89,7 +89,7 @@ class Extractor(nn.Module):
     self.dropout1 = nn.Dropout(self.drop_rate)
     self.layer_blocks = nn.ModuleList([ABlock(channel = self.hidden_channels, qkv_bias = self.qkv_bias, num_heads = self.num_heads, length = 75, **kwargs) for i in range(self.depth)])
     self.spatial_blocks = nn.ModuleList([ABlock(channel = self.hidden_channels, qkv_bias = self.qkv_bias, num_heads = self.num_heads, length = 302, **kwargs) for i in range(self.depth)])
-    self.head = nn.Linear(self.hidden_channels, 1, bias = False)
+    self.head = nn.Linear(self.hidden_channels, 2, bias = False)
   def forward(self, inputs):
     batch = inputs.shape[0]
     # inputs.shape = (batch, 75, 302, 1)
@@ -112,7 +112,7 @@ class Extractor(nn.Module):
     results = self.layernorm2(results)
     results = self.dense2(results) # results.shape = (batch, 75, 302, hidden_channels)
     results = self.tanh(results) # results.shape = (batch, 75, 302, hidden_channels)
-    results = self.head(results) # results.shape = (batch, 75, 302, 1)
+    results = self.head(results) # results.shape = (batch, 75, 302, 2)
     return results
 
 class PredictorSmall(nn.Module):
@@ -122,7 +122,8 @@ class PredictorSmall(nn.Module):
     depth = kwargs.get('depth', 3)
     self.predictor = Extractor(hidden_channels = hidden_channels, depth = depth, **kwargs)
   def forward(self, inputs):
-    return torch.squeeze(self.predictor(inputs), dim = -1)
+    results = self.predictor(inputs)
+    return results[...,0], results[...,1] # shape = (batch, 75, 302)
 
 class PredictorBase(nn.Module):
   def __init__(self, **kwargs):
@@ -131,10 +132,11 @@ class PredictorBase(nn.Module):
     depth = kwargs.get('depth', 24)
     self.predictor = Extractor(hidden_channels = hidden_channels, depth = depth, **kwargs)
   def forward(self, inputs):
-    return torch.squeeze(self.predictor(inputs), dim = -1)
+    results = self.predictor(inputs)
+    return results[...,0], results[...,1] # shape = (batch, 75, 302)
 
 if __name__ == "__main__":
   predictor = PredictorSmall(in_channel = 1)
   inputs = torch.randn(2, 75, 302, 1)
-  results = predictor(inputs)
-  print(results.shape)
+  pred_exc, pred_vxc = predictor(inputs)
+  print(pred_exc.shape, pred_vxc.shape)
