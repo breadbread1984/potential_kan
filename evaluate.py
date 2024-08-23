@@ -33,10 +33,8 @@ def main(unused_argv):
   v_true, v_diff = list(), list()
   for rho, vxc, exc in eval_dataloader:
     rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
-    rho.requires_grad = True
     inputs = torch.unsqueeze(rho, dim = -1)
-    pred_exc = model(inputs)
-    pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
+    pred_exc, pred_vxc = model(inputs)
     pred_exc = pred_exc.flatten()
     pred_vxc = pred_vxc.flatten()
     vxc = vxc.flatten()
