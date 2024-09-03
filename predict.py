@@ -19,7 +19,7 @@ class Predict(object):
     rho = grids.vector_to_matrix(scf_r_3[0,:]) # rho.shape = (natom, 75, 302)
     rho = torch.tensor(rho, dtype = self.precision).to(device('cuda'))
     inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (natom, 75, 302, 1)
-    inputs.requires_grad = True
+    rho.requires_grad = True
     pred_exc = self.model(inputs) # pred_exc.shape = (natom, 75, 302)
     pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc # pred_exc.shape = (natom, 75, 302)
     pred_vxc = pred_vxc.detach().cpu().numpy()
