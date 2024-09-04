@@ -18,8 +18,8 @@ class RhoDataset(Dataset):
         if ext != '.npz': continue
         fp = np.load(join(root, f))
         self.npys.append({'rho_inv_4_norm': fp['rho_inv_4_norm'],
-                          'vxc1_b3lyp': fp['vxc1_lda'],
-                          'exc1_tr_b3lyp': fp['exc1_tr_lda']})
+                          'vxc1_lda': fp['vxc1_lda'],
+                          'exc1_tr_lda': fp['exc1_tr_lda']})
         del fp
         self.start_indices.append(self.data_count)
         self.data_count += self.npys[-1]['rho_inv_4_norm'].shape[1]
