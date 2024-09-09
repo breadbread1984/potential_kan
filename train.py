@@ -55,7 +55,7 @@ def main(unused_argv):
   start_epoch = 0
   if exists(join(FLAGS.ckpt, 'model.pth')):
     ckpt = load(join(FLAGS.ckpt, 'model.pth'))
-    state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
+    state_dict = ckpt['state_dict']
     model.load_state_dict(state_dict)
     optimizer.load_state_dict(ckpt['optimizer'])
     scheduler = ckpt['scheduler']
@@ -72,7 +72,7 @@ def main(unused_argv):
       pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
       loss1 = mae(exc, pred_exc)
       
-      pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
+      pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
       loss2 = mae(vxc, pred_vxc)
       loss = loss1 + loss2
       loss.backward()
@@ -93,7 +93,7 @@ def main(unused_argv):
         rho.requires_grad = True
         inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
         pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
-        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
+        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
         pred_exc = pred_exc.flatten()
         pred_vxc = pred_vxc.flatten()
         vxc = vxc.flatten()
