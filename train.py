@@ -63,10 +63,10 @@ def main(unused_argv):
   for epoch in range(start_epoch, FLAGS.epochs):
     train_dataloader.sampler.set_epoch(epoch)
     model.train()
-    for step, (rho, vxc, exc) in enumerate(train_dataloader):
+    for step, (rho, vxc, exc, weights, energy) in enumerate(train_dataloader):
       optimizer.zero_grad()
       # rho.shape = (batch, 75, 302, 1) vxc.shape = (batch, 75, 302) exc.shape = (batch, 75, 302)
-      rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
+      rho, vxc, exc, weights, energy = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device)), weights.to(device(FLAGS.device)), energy.to(device(FLAGS.device))
       rho.requires_grad = True
       inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
       pred_exc = model(inputs) # pred_exc.shape = (batch, 75, 302)
@@ -74,7 +74,10 @@ def main(unused_argv):
       
       pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0] + pred_exc
       loss2 = mae(vxc, pred_vxc)
-      loss = loss1 + loss2
+
+      loss3 = mae(energy, torch.sum(pred_exc * rho * weights, dim = (1,2)))
+
+      loss = loss1 + loss2 + loss3
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
@@ -82,6 +85,7 @@ def main(unused_argv):
         print('Step #%d Epoch #%d: exc loss %f, vxc loss %f, lr %f' % (global_steps, epoch, loss1, loss2, scheduler.get_last_lr()[0]))
         tb_writer.add_scalar('exc mae loss', loss1, global_steps)
         tb_writer.add_scalar('vxc mae loss', loss2, global_steps)
+        tb_writer.add_scalar('e * rho * weights mae loss', loss3, global_steps)
     scheduler.step()
     if dist.get_rank() == 0:
       eval_dataloader.sampler.set_epoch(epoch)
