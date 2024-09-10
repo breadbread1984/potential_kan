@@ -109,7 +109,7 @@ class Predictor(nn.Module):
 class PredictorSmall(nn.Module):
   def __init__(self):
     super(PredictorSmall, self).__init__()
-    kwargs = {'hidden_dim': 256, 'num_blocks': 6, 'tokens_mlp_dim': 384, 'channels_mlp_dim': 256*4, 'drop_rate': 0.1}
+    kwargs = {'hidden_dim': 256, 'num_blocks': 3, 'tokens_mlp_dim': 384, 'channels_mlp_dim': 256*4, 'drop_rate': 0.1}
     self.predictor = Predictor(**kwargs)
   def forward(self, inputs):
     return self.predictor(inputs)
