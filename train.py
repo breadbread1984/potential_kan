@@ -92,7 +92,7 @@ def main(unused_argv):
       model.eval()
       e_true, e_diff = list(), list()
       v_true, v_diff = list(), list()
-      for rho, vxc, exc in eval_dataloader:
+      for rho, vxc, exc, weights, energy in eval_dataloader:
         rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
         rho.requires_grad = True
         inputs = torch.unsqueeze(rho, dim = -1) # inputs.shape = (batch, 75, 302, 1)
