@@ -32,6 +32,7 @@ class RhoDataset(Dataset):
     vxc = self.npys[memmap_index]['vxc1_lda'][index_in_memmap] # vxc.shape = (75, 302,)
     exc = self.npys[memmap_index]['exc1_tr_lda'][index_in_memmap] # exc.shape = (75, 302,)
     rho = np.ascontiguousarray(rho)
+    #rho = np.ascontiguousarray(np.log(np.arcsinh(rho))/np.log(0.5e-9))
     vxc = np.ascontiguousarray(vxc)
     exc = np.ascontiguousarray(exc)
     return rho.astype(np.float32), vxc.astype(np.float32), exc.astype(np.float32)
