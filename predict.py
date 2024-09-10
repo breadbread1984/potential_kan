@@ -10,7 +10,7 @@ class Predict(object):
   def __init__(self, ckpt_path, precision = 'float32'):
     assert precision in {'float32', 'float64'}
     ckpt = load(join(ckpt_path, 'model.pth'))
-    self.model = PredictorSmall(in_channel = 1).to(torch.device('cuda'))
+    self.model = PredictorSmall().to(torch.device('cuda'))
     state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
     self.model.load_state_dict(state_dict)
     self.model.eval()
