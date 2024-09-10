@@ -44,7 +44,8 @@ class MLPMixer(nn.Module):
   def forward(self, inputs):
     batch = inputs.shape[0]
     # inputs.shape = (batch, 75, 302, 1)
-    results = self.layernorm1(inputs)
+    #results = self.layernorm1(inputs)
+    results = inputs
     results = self.dense(results) # results.shape = (batch, 75, 302, hidden_dim)
     results = self.gelu(results)
     results = self.dropout(results)
