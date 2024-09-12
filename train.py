@@ -70,7 +70,7 @@ def main(unused_argv):
       rho.requires_grad = True
       inputs = torch.flatten(rho, start_dim = 1) # inputs.shape = (batch, 75 * 302)
       if epoch == 0 and step % 5 == 0 and step < 50:
-        model.update_grid(inputs)
+        model.module.update_grid(inputs)
       pred_exc = model(inputs)
       pred_exc = torch.reshape(pred_exc, (-1, 75, 302)) # pred_exc.shape = (batch, 75, 302)
       loss1 = mae(exc, pred_exc)
