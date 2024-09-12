@@ -40,7 +40,7 @@ class MLPMixer(nn.Module):
       })
     self.layers = nn.ModuleDict(layers)
     self.layernorm2 = nn.LayerNorm((75, 302, self.hidden_dim))
-    self.head = nn.Linear(self.hidden_dim, 1)
+    self.head = nn.Linear(self.hidden_dim, 2)
   def forward(self, inputs):
     batch = inputs.shape[0]
     # inputs.shape = (batch, 75, 302, 1)
@@ -103,8 +103,8 @@ class Predictor(nn.Module):
     self.predictor = MLPMixer(**kwargs)
   def forward(self, inputs):
     results = self.predictor(inputs)
-    results = torch.squeeze(results, dim = -1) # results.shape = (batch, 75, 302)
-    return results
+    # results.shape = (batch, 75, 302)
+    return results[...,0], results[...,1]
 
 class PredictorSmall(nn.Module):
   def __init__(self):
