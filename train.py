@@ -43,7 +43,7 @@ def main(unused_argv):
     print('trainset size: %d, evalset size: %d' % (len(trainset), len(evalset)))
   train_dataloader = DataLoader(trainset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = trainset_sampler, pin_memory = False)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = evalset_sampler, pin_memory = False)
-  model = KAN(channels = [75 * 302, 8, 4, 75 * 302], grid = 7 , k = 3)
+  model = KAN(width = [75 * 302, 8, 4, 75 * 302], grid = 7 , k = 3)
   model.to(device(FLAGS.device))
   model = DDP(model, device_ids=[dist.get_rank()], output_device=dist.get_rank(), find_unused_parameters=True)
   mae = L1Loss()
