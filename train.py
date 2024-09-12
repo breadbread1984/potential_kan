@@ -70,9 +70,8 @@ def main(unused_argv):
       rho.requires_grad = True
       inputs = torch.flatten(rho, start_dim = 1) # inputs.shape = (batch, 75 * 302)
       if epoch == 0 and step % 5 == 0 and step < 50:
-        for param in model.parameters():
-          dist.broadcast(param.data, src = 0)
-      pred_exc, regularizer = model(inputs, do_train = True if epoch % 5 == 0 else False)
+        model.update_grid(inputs)
+      pred_exc = model(inputs)
       pred_exc = torch.reshape(pred_exc, (-1, 75, 302)) # pred_exc.shape = (batch, 75, 302)
       loss1 = mae(exc, pred_exc)
       
@@ -81,7 +80,9 @@ def main(unused_argv):
 
       loss3 = mae(energy, torch.sum(pred_exc * rho * weights, dim = (1,2)))
 
-      loss = loss1 + loss2 + loss3 + 0.01 * regularizer
+      loss4 = model.get_reg('edge_forward_spline_n', 1., 2., 0., 0.)
+
+      loss = loss1 + loss2 + loss3 + loss4
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
