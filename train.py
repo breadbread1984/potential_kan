@@ -23,13 +23,12 @@ def add_options():
   flags.DEFINE_string('trainset', default = None, help = 'file for trainset')
   flags.DEFINE_string('valset', default = None, help = 'file for valset')
   flags.DEFINE_string('ckpt', default = 'ckpt', help = 'path to directory for checkpoints')
-  flags.DEFINE_integer('batch_size', default = 4096, help = 'batch size')
+  flags.DEFINE_integer('batch_size', default = 6, help = 'batch size')
   flags.DEFINE_integer('save_freq', default = 1000, help = 'checkpoint save frequency')
   flags.DEFINE_integer('epochs', default = 200, help = 'epochs to train')
   flags.DEFINE_float('lr', default = 1e-4, help = 'learning rate')
   flags.DEFINE_integer('decay_steps', default = 200000, help = 'decay steps')
   flags.DEFINE_integer('workers', default = 16, help = 'number of workers')
-  flags.DEFINE_float('reg_weight', default = 0.01, help = 'weight of regularizer')
   flags.DEFINE_enum('device', default = 'cuda', enum_values = ['cpu', 'cuda'], help = 'device')
 
 def main(unused_argv):
@@ -44,7 +43,7 @@ def main(unused_argv):
     print('trainset size: %d, evalset size: %d' % (len(trainset), len(evalset)))
   train_dataloader = DataLoader(trainset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = trainset_sampler, pin_memory = False)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers, sampler = evalset_sampler, pin_memory = False)
-  model = KAN(channels = [81*3, 8, 4, 1], grid = 7, k = 3)
+  model = KAN(width = [75 * 302, 8, 4, 75 * 302], grid = 7 , k = 3)
   model.to(device(FLAGS.device))
   model = DDP(model, device_ids=[dist.get_rank()], output_device=dist.get_rank(), find_unused_parameters=True)
   mae = L1Loss()
@@ -56,7 +55,7 @@ def main(unused_argv):
   start_epoch = 0
   if exists(join(FLAGS.ckpt, 'model.pth')):
     ckpt = load(join(FLAGS.ckpt, 'model.pth'))
-    state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
+    state_dict = ckpt['state_dict']
     model.load_state_dict(state_dict)
     optimizer.load_state_dict(ckpt['optimizer'])
     scheduler = ckpt['scheduler']
@@ -64,40 +63,83 @@ def main(unused_argv):
   for epoch in range(start_epoch, FLAGS.epochs):
     train_dataloader.sampler.set_epoch(epoch)
     model.train()
-    for step, (x, e) in enumerate(train_dataloader):
+    for step, (rho, vxc, exc, weights, energy) in enumerate(train_dataloader):
       optimizer.zero_grad()
-      x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-      preds, regularizer = model(x, do_train = True if epoch % 5 == 0 else False)
-      loss = mae(e, preds) + FLAGS.reg_weight * regularizer
+      # rho.shape = (batch, 75, 302, 1) vxc.shape = (batch, 75, 302) exc.shape = (batch, 75, 302)
+      rho, vxc, exc, weights, energy = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device)), weights.to(device(FLAGS.device)), energy.to(device(FLAGS.device))
+      rho.requires_grad = True
+      inputs = torch.flatten(rho, start_dim = 1) # inputs.shape = (batch, 75 * 302)
+      if epoch == 0 and step % 5 == 0 and step < 50:
+        if dist.get_rank() == 0:
+          model.module.update_grid(inputs)
+        for param in model.parameters():
+          dist.broadcast(param.data, src = 0)
+      pred_exc, regularizer = model(inputs, do_train = True if epoch % 5 == 0 else False)
+      pred_exc = torch.reshape(pred_exc, (-1, 75, 302)) # pred_exc.shape = (batch, 75, 302)
+      loss1 = mae(exc, pred_exc)
+      
+      pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+      loss2 = mae(vxc, pred_vxc)
+
+      loss3 = mae(energy, torch.sum(pred_exc * rho * weights, dim = (1,2)))
+
+      loss = loss1 + loss2 + loss3 + 0.01 * regularizer
       loss.backward()
       optimizer.step()
       global_steps = epoch * len(train_dataloader) + step
       if global_steps % 100 == 0 and dist.get_rank() == 0:
-        print('Step #%d Epoch #%d: loss %f, lr %f' % (global_steps, epoch, loss, scheduler.get_last_lr()[0]))
-        tb_writer.add_scalar('loss', loss, global_steps)
+        print('Step #%d Epoch #%d: exc loss %f, vxc loss %f, lr %f' % (global_steps, epoch, loss1, loss2, scheduler.get_last_lr()[0]))
+        tb_writer.add_scalar('exc mae loss', loss1, global_steps)
+        tb_writer.add_scalar('vxc mae loss', loss2, global_steps)
+        tb_writer.add_scalar('e * rho * weights mae loss', loss3, global_steps)
     scheduler.step()
     if dist.get_rank() == 0:
       eval_dataloader.sampler.set_epoch(epoch)
       model.eval()
-      true, diff = list(), list()
-      for x, e in eval_dataloader:
-        x, e = x.to(device(FLAGS.device)), e.to(device(FLAGS.device))
-        pred, _ = model(x, do_train = False)
-        true_e = torch.sinh(e).detach().cpu().numpy()
-        pred_e = torch.sinh(pred).detach().cpu().numpy()
-        true.append(true_e)
-        diff.append(np.abs(true_e - pred_e))
-      true = np.squeeze(np.concatenate(true, axis = 0))
-      diff = np.squeeze(np.concatenate(diff, axis = 0))
+      e_true, e_diff = list(), list()
+      v_true, v_diff = list(), list()
+      for rho, vxc, exc, weights, energy in eval_dataloader:
+        rho, vxc, exc = rho.to(device(FLAGS.device)), vxc.to(device(FLAGS.device)), exc.to(device(FLAGS.device))
+        rho.requires_grad = True
+        inputs = torch.flatten(rho, start_dim = 1) # inputs.shape = (batch, 75 * 302)
+        pred_exc, _ = model(inputs, do_train = False) # pred_exc.shape = (batch, 75, 302)
+        pred_exc = torch.reshape(pred_exc, (-1, 75, 302))
+        pred_vxc = autograd.grad(torch.sum(rho * pred_exc), rho, create_graph = True)[0]
+        pred_exc = pred_exc.flatten()
+        pred_vxc = pred_vxc.flatten()
+        vxc = vxc.flatten()
+        exc = exc.flatten()
+        true_e = exc.detach().cpu().numpy()
+        pred_e = pred_exc.detach().cpu().numpy()
+        e_true.append(true_e)
+        e_diff.append(np.abs(true_e - pred_e))
+        true_v = vxc.detach().cpu().numpy()
+        pred_v = pred_vxc.detach().cpu().numpy()
+        v_true.append(true_v)
+        v_diff.append(np.abs(true_v - pred_v))
+      e_true = np.squeeze(np.concatenate(e_true, axis = 0))
+      e_diff = np.squeeze(np.concatenate(e_diff, axis = 0))
+      v_true = np.squeeze(np.concatenate(v_true, axis = 0))
+      v_diff = np.squeeze(np.concatenate(v_diff, axis = 0))
       plt.xlabel('exc ground truth')
       plt.ylabel('exc prediction absolute loss')
-      plt.scatter(true, diff, c = 'b', s = 2, alpha = 0.7)
+      plt.scatter(e_true, e_diff, c = 'b', s = 2, alpha = 0.7)
       global_steps = epoch * len(train_dataloader) + step
-      tb_writer.add_figure('loss distribution', plt.gcf(), global_steps)
+      tb_writer.add_figure('exc loss distribution', plt.gcf(), global_steps)
       plt.clf()
-      counts, bins = np.histogram(diff, bins = 50)
+      plt.xlabel('vxc ground truth')
+      plt.ylabel('vxc prediction absolute loss')
+      plt.scatter(v_true, v_diff, c = 'b', s = 2, alpha = 0.7)
+      global_steps = epoch * len(train_dataloader) + step
+      tb_writer.add_figure('vxc loss distribution', plt.gcf(), global_steps)
+      plt.clf()
+      counts, bins = np.histogram(e_diff, bins = 50)
       plt.stairs(counts, bins)
-      tb_writer.add_figure('histogram', plt.gcf(), global_steps)
+      tb_writer.add_figure('exc histogram', plt.gcf(), global_steps)
+      plt.clf()
+      counts, bins = np.histogram(v_diff, bins = 50)
+      plt.stairs(counts, bins)
+      tb_writer.add_figure('vxc histogram', plt.gcf(), global_steps)
     if dist.get_rank() == 0:
       ckpt = {'epoch': epoch,
               'state_dict': model.state_dict(),
@@ -108,4 +150,3 @@ def main(unused_argv):
 if __name__ == "__main__":
   add_options()
   app.run(main)
-
