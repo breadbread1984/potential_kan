@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, distributed
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
 from create_dataset import RhoDataset
-from models import KAN
+from kan import KAN
 
 FLAGS = flags.FLAGS
 
