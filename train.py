@@ -70,8 +70,6 @@ def main(unused_argv):
       rho.requires_grad = True
       inputs = torch.flatten(rho, start_dim = 1) # inputs.shape = (batch, 75 * 302)
       if epoch == 0 and step % 5 == 0 and step < 50:
-        if dist.get_rank() == 0:
-          model.module.update_grid(inputs)
         for param in model.parameters():
           dist.broadcast(param.data, src = 0)
       pred_exc, regularizer = model(inputs, do_train = True if epoch % 5 == 0 else False)
