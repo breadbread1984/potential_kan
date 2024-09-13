@@ -23,7 +23,7 @@ def main(unused_argv):
   assert exists(FLAGS.ckpt)
   evalset = RhoDataset(FLAGS.valset)
   eval_dataloader = DataLoader(evalset, batch_size = FLAGS.batch_size, shuffle = False, num_workers = FLAGS.workers)
-  model = PredictorSmall(in_channel = 1)
+  model = PredictorSmall()
   ckpt = load(FLAGS.ckpt)
   state_dict = {(key.replace('module.','') if key.startswith('module.') else key):value for key, value in ckpt['state_dict'].items()}
   model.load_state_dict(state_dict)
